@@ -11,6 +11,9 @@ const Connection = () => {
     const [data, setData] = useState<Data | null>(null);
 
     useEffect(() => {
+        const socketUrl = process.env.NODE_ENV === 'production'
+        ? 'ws://https://self-drive.vercel.app/ws'
+        : 'ws://localhost:8000/ws';
         const socket = new WebSocket('ws://localhost:8000/ws');
 
         socket.onopen = () => {
