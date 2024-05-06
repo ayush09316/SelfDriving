@@ -12,7 +12,7 @@ const Connection = () => {
 
     useEffect(() => {
         const socketUrl = process.env.NODE_ENV === 'production'
-        ? 'wss://https://self-drive.vercel.app/ws'
+        ? 'wss://self-drive.vercel.app/ws'
         : 'ws://localhost:8000/ws';
         const socket = new WebSocket('ws://localhost:8000/ws');
 
