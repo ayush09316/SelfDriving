@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Info } from "@/constants";
 import InfoCard from "@/components/InfoCard";
-import Connection from "@/components/Connection";
+
 
 export default function Home() {
   return (
@@ -28,7 +28,7 @@ export default function Home() {
           <Image src={"/map.png"} alt="map" width={400} height={400} />
         </div>
       </div>
-      <Connection />
+  
     </>
   );
 }
