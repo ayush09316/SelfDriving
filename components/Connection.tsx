@@ -1,62 +1,54 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useRef } from 'react';
 
-interface Coordinate {
+interface Data {
   lat: string;
   long: string;
   time: Date;
 }
 
 const Connection = () => {
-  const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
+    const [data, setData] = useState<Data | null>(null);
 
-  useEffect(() => {
-    // Function to fetch data from the backend
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/coordinates/');
-        if (response.ok) {
-          const data = await response.json();
-          setCoordinates(data);
-        } else {
-          throw new Error('Failed to fetch data');
-        }
-      } catch (error) {
-        console.error('Error fetching coordinates:', error);
-      }
-    };
+    useEffect(() => {
+        const socket = new WebSocket('ws://localhost:8000/ws');
 
-    // Initial fetch when component mounts
-    fetchData();
+        socket.onopen = () => {
+            console.log('Connected to WebSocket');
+        };
 
-    // WebSocket connection
-    const socket = new WebSocket('ws://localhost:8000/ws');
-    socket.onmessage = (event) => {
-      const newCoordinate = JSON.parse(event.data) as Coordinate;
-      setCoordinates((prevCoordinates) => [...prevCoordinates, newCoordinate]);
-    };
+        socket.onmessage = (event) => {
+            const newData: Data = JSON.parse(event.data);
+            setData(newData);
+            console.log('Received new data:', newData);
+        };
 
-    // Fetch data every 5 minutes
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
 
-    // return () => {
-    //   clearInterval(interval);
-    //   socket.close();
-    // };
-  }, []);
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
 
-  return (
-    <div>
-      <h1>Real-Time Coordinate Data</h1>
-      <ul>
-        {coordinates.map((coordinate, index) => (
-          <li key={index}>
-            Latitude: {coordinate.lat}, Longitude: {coordinate.long}, Time: {coordinate.time.toString()}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+        // Clean up WebSocket connection on component unmount
+        return () => {
+            socket.close();
+        };
+    }, []);
+
+    return (
+        <div>
+            {data ? (
+                <pre>
+                    {JSON.stringify(data, null, 2)}
+                </pre>
+            ) : (
+                <p>No data received yet.</p>
+            )}
+        </div>
+    );
 };
+
 
 export default Connection;

@@ -1,12 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from .database import collection  # Import database.py here
-from .model import Cordinate
-from .socket import send_coordinates
+from bson.json_util import dumps
+from pymongo import DESCENDING
+from .database import collection # Import database.py here
+import asyncio
 
 
 app = FastAPI()
-
 
 # CORS
 origins = [
@@ -27,16 +27,42 @@ app.add_middleware(
 
 
 
+
 @app.get("/")
 def apiRunning():
     res = {
         "status" : "ok" ,
-        "message" : "Api is runinng"
+        "message" : "Api is running"
     }
     return res
 
-@app.get("/coordinates/")
-async def get_coordinates():
-    coordinates = list(collection.find({}, {"_id": 0}))
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    print("Connected to websocket")
 
-    return coordinates
+    try:
+        # Listen for new data indefinitely
+        while True:
+            # Query the database for the latest document
+            latest_document = collection.find_one({}, sort=[('_id', DESCENDING)])
+
+            # Check if a document was found
+            if latest_document:
+                # Convert ObjectId to string for serialization
+                latest_document['_id'] = str(latest_document['_id'])
+                # Serialize document to JSON
+                latest_document_json = dumps(latest_document)
+                # Send the serialized document to the client
+                await websocket.send_text(latest_document_json)
+                print("Latest document sent")
+            else:
+                print("No documents found")
+            
+            # Wait for 5 minutes before checking again
+            await asyncio.sleep(30)
+    except Exception as e:
+        print("An error occurred:", e)
+
+
+ 
