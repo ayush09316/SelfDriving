@@ -14,7 +14,7 @@ const Connection = () => {
         const socketUrl = process.env.NODE_ENV === 'production'
         ? 'wss://self-drive.vercel.app/ws'
         : 'ws://localhost:8000/ws';
-        const socket = new WebSocket('ws://localhost:8000/ws');
+        const socket = new WebSocket(socketUrl);
 
         socket.onopen = () => {
             console.log('Connected to WebSocket');
